@@ -1,0 +1,115 @@
+{% style %}
+  .product-options-selctor label {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    background-size: contain !important;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .swatch-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .product-options-selctor input:checked + label {
+      border: 2px solid black;
+  }
+
+  .product-options-selctor select {
+    width: 100%;
+    height: 50px;
+    padding-left: 10px;
+  }
+
+  .product-options-selctor select {
+    width: 100%;
+    height: 50px;
+    padding-left: 10px;
+  }
+  
+  .product-options-selctor fieldset {
+      margin-bottom: 16px;
+  }
+
+  button.buy-btn-custom {
+    width: 100%;
+    padding: 10px;
+    background: black;
+    color: white;
+    transition: 0.25s ease;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  
+  button.buy-btn-custom:hover {
+      color: black;
+      background: white;
+  }
+
+  .button-buy-custom a {
+    color: black;
+  }
+{% endstyle %}
+<ul class="variant-information-ul" style=" display: none; ">
+  {% for variant in product.variants %}
+    <li data-var-id="{{ variant.id }}" data-select-image="{{ variant.image | img_url: 'master' }}">{{ variant.title }}</li>
+  {% endfor %}
+</ul>
+<div class="product-options-selctor">
+  {%- unless product.has_only_default_variant -%}
+  {% assign variantImage = '' %}
+  {% for variant in product.variants %}
+    {%  assign varImage = variant.image | img_url: 'master' %}
+    {% assign variantImage = variantImage | append: varImage | append: ", " %}
+ {% endfor%}
+    {% assign newImage = variantImage | split: ", " %}
+  {%- for option in product.options_with_values -%}
+  {% assign optionHandleize = option.name | handleize %}
+    {%- if optionHandleize == 'color' -%}
+      <fieldset id="ProductSelect-option-{{ forloop.index0 }}" name="{{ option.name | handleize }}">
+        <legend>
+          {{ option.name | escape }}
+        </legend>
+        <div class="swatch-container">
+        {%- for value in option.values -%}
+          <!-- Check to see if there's a product size option. If there is a size, check to see if there's any availble for purchase. If not, set the variat control in a "disabled" state. -->
+          {%- assign variant_label_state = true -%}
+
+          {%- if product.options.size == 1 -%}
+            {%- unless product.variants[forloop.index0].available -%}
+              {%- assign variant_label_state = false -%}
+            {%- endunless -%}
+          {%- endif -%}
+          {% assign myIndex = forloop.index %}
+          <input type="radio"
+            style="display: none"
+            {% if option.selected_value == value %} checked="checked"{% endif %}
+            {% unless variant_label_state %} disabled="disabled"{% endunless %}
+            value="{{ value | escape }}"
+            data-index="option{{ forloop.index }}"
+            name="{{ option.name | handleize }}"
+            id="ProductSelect-option-{{ option.name | handleize }}-{{ value | escape }}">
+          <label style=" background: {{ value | handleize }}; " for="ProductSelect-option-{{ option.name | handleize }}-{{ value | escape }}"></label>
+        {%- endfor -%}
+        </div>
+      </fieldset>
+    {%- else -%}
+      <label for="ProductSelect-option-{{ forloop.index0 }}">
+        {{ option.name | escape }}
+      </label>
+      <select id="ProductSelect-{{ forloop.index0 }}" data-index="option{{ forloop.index }}">
+        {%- for value in option.values -%}
+          {% assign checkValue = value | handleize %}
+          <option value="{{ value | escape }}"{% if option.selected_value == value and checkValue != 'unselected' %} selected="selected" {% elsif checkValue contains 'unselected' %} selected="selected" disabled{% endif %}>
+            {{ value | escape }}
+          </option>
+        {%- endfor -%}
+      </select>
+    {%- endif -%}
+
+  {%- endfor -%}
+{%- endunless -%}
+</div>
